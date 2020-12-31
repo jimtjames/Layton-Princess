@@ -1,3 +1,5 @@
+import java.rmi.UnexpectedException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 
@@ -63,42 +65,29 @@ public class Main {
         piecesQueue.addLast(pieceArr);
         long count = 0;
         System.out.print("Searching");
+        /*
         while (!queue.isEmpty()) {
             PiecePart[][] state = queue.removeFirst();
             StringBuilder path = paths.removeFirst();
             Piece[] pieces = piecesQueue.removeFirst();
-            /*for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < 4; i++) {
                 System.out.println(Arrays.toString(state[i]));
             }
-            System.out.println();*/
+            System.out.println();
             if (count++ % 10000 == 0) {
                 //System.out.print(".");
                 System.out.println(path.length() / 2);
             }
-            if (path.length() > 200) {
+            if (path.length() > 4) {
                 continue;
             }
             for (int i = 0; i < pieces.length; i++) {
                 for (int m = 0; m < 4; m ++) {
                     //deep copy the board
-                    PiecePart[][] boardCopy = new PiecePart[4][5];
-                    for (int j = 0; j < 4; j++) {
-                        for (int k = 0; k < 5; k++) {
-                            if (state[j][k] == null) {
-                                continue;
-                            }
-                            boardCopy[j][k] = (PiecePart) state[j][k].clone();
-                        }
-                    }
-                    Piece[] pieceCopy = new Piece[pieces.length];
-                    //deep copy the pieces
-                    for (int j = 0; j < pieceCopy.length; j++) {
-                        pieceCopy[j] = new Piece(pieces[j].identity);
-                        pieceCopy[j].pieces = new PiecePart[pieces[j].pieces.length];
-                        for (int k = 0; k < pieces[j].pieces.length; k++) {
-                            pieceCopy[j].pieces[k] = boardCopy[pieces[j].pieces[k].i][pieces[j].pieces[k].j];
-                        }
-                    }
+
+                    PiecePart[][] boardCopy = boardCopy(state);
+                    Piece[] pieceCopy = piecesCopy(pieces, boardCopy);
+
                     if (m == 0 && !path.toString().substring(path.toString().length() - 2).equals(i + "D") && pieceCopy[i].moveUp(boardCopy)) {
                         //check if we moved red piece
                         if (pieceCopy[i].identity == 4) {
@@ -183,6 +172,161 @@ public class Main {
                 }
             }
         }
-        System.out.println("Finished, found no solution...");
+        System.out.println("Finished, found no solution...");*/
+        cycle_tests(board, pieceArr);
     }
+
+    public static void printBoard(PiecePart[][] board) {
+        for (int i = 0; i < 4; i++) {
+            System.out.println(Arrays.toString(board[i]));
+        }
+        System.out.println();
+    }
+
+
+    public static PiecePart[][] boardCopy(PiecePart[][] input) throws CloneNotSupportedException {
+        PiecePart[][] boardCopy = new PiecePart[input.length][input[0].length];
+        for (int j = 0; j < input.length; j++) {
+            for (int k = 0; k < input[0].length; k++) {
+                if (input[j][k] == null) {
+                    continue;
+                }
+                boardCopy[j][k] = (PiecePart) input[j][k].clone();
+            }
+        }
+        return boardCopy;
+    }
+
+    public static Piece[] piecesCopy(Piece[] pieces, PiecePart[][] boardCopy) {
+        Piece[] pieceCopy = new Piece[pieces.length];
+        //deep copy the pieces
+        for (int j = 0; j < pieceCopy.length; j++) {
+            pieceCopy[j] = new Piece(pieces[j].identity);
+            pieceCopy[j].pieces = new PiecePart[pieces[j].pieces.length];
+            for (int k = 0; k < pieces[j].pieces.length; k++) {
+                pieceCopy[j].pieces[k] = boardCopy[pieces[j].pieces[k].i][pieces[j].pieces[k].j];
+            }
+        }
+        return pieceCopy;
+    }
+
+
+    /**
+     * Determines if the string representation of moves contains a cycle
+     * @param path - represents moves from starting position
+     * @return true if cycle, false if no cycle
+     */
+    public static boolean check_cycle(StringBuilder path, PiecePart[][] board, Piece[] pieces) throws CloneNotSupportedException {
+        if (path == null || path.equals("")) {
+            return false;
+        }
+        ArrayList<PiecePart[][]> states = new ArrayList<>();
+        states.add(board);
+        PiecePart[][] boardCopy = boardCopy(board);
+        Piece[] piecesCopy = piecesCopy(pieces, boardCopy);
+        assert(path.length() % 2 == 0);
+
+        for (int i = 0; i < path.length(); i+=2 ) {
+            String next_move = path.substring(i, i+2);
+            int piece_index = Integer.parseInt(next_move.substring(0, 1));
+            char direction = next_move.charAt(1);
+
+            if (direction == 'U') {
+                piecesCopy[piece_index].moveUp(boardCopy);
+            } else if (direction == 'D') {
+                piecesCopy[piece_index].moveDown(boardCopy);
+            } else if (direction == 'R') {
+                piecesCopy[piece_index].moveRight(boardCopy);
+            } else {
+                piecesCopy[piece_index].moveLeft(boardCopy);
+            }
+
+            //check if our current board state is the same as any previous state
+            for (int j = 0; j < states.size(); j++) {
+
+
+                PiecePart[][] oldstate = states.get(j);
+
+                if (Arrays.deepEquals(oldstate, boardCopy)) {
+                    /*
+                    System.out.println("old: " + j);
+                    printBoard(oldstate);
+                    System.out.println("new: " + i/2);
+                    printBoard(boardCopy);*/
+                    return true;
+                }
+            }
+            //otherwise, no cycle detected so far, so let's continue working
+            states.add(boardCopy(boardCopy));
+        }
+
+        return false;
+    }
+
+    public static void cycle_tests(PiecePart[][] boards, Piece[] pieces) {
+        try{
+            StringBuilder test_path = null;
+            if (check_cycle(test_path, boards, pieces)) {
+                System.out.println("Null test failed");
+            } else {
+                System.out.println("Null test passed");
+            }
+
+        } catch (Exception e) {
+            System.out.println("Null test exception:" + e);
+        }
+
+        try{
+            StringBuilder test_path = new StringBuilder("");
+            if (check_cycle(test_path, boards, pieces)) {
+                System.out.println("Empty test failed");
+            } else {
+                System.out.println("Empty test passed");
+            }
+
+        } catch (Exception e) {
+            System.out.println("Empty test exception:" + e);
+        }
+
+        try{
+            StringBuilder test_path = new StringBuilder("0D");
+            if (check_cycle(test_path, boards, pieces)) {
+                System.out.println("Basic test failed");
+            } else {
+                System.out.println("Basic test passed");
+            }
+
+        } catch (Exception e) {
+            System.out.println("Basic test exception:" + e);
+        }
+
+        try{
+            StringBuilder test_path = new StringBuilder("0D0U");
+            if (check_cycle(test_path, boards, pieces)) {
+                System.out.println("Basic cycle test passed");
+            } else {
+                System.out.println("Basic cycle test failed");
+            }
+
+        } catch (Exception e) {
+            System.out.println("Basic cycle test exception:" + e);
+        }
+
+        try{
+            StringBuilder test_path = new StringBuilder("0D3U1R2R0U2L1L3D0D");
+            if (check_cycle(test_path, boards, pieces)) {
+                System.out.println("Advanced cycle test passed");
+            } else {
+                System.out.println("Advanced cycle test failed");
+            }
+
+        } catch (Exception e) {
+            System.out.println("Advanced cycle test exception:" + e);
+        }
+
+    }
+
 }
+
+
+
