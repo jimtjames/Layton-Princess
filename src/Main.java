@@ -65,7 +65,6 @@ public class Main {
         piecesQueue.addLast(pieceArr);
         long count = 0;
         System.out.print("Searching");
-        /*
         while (!queue.isEmpty()) {
             PiecePart[][] state = queue.removeFirst();
             StringBuilder path = paths.removeFirst();
@@ -78,7 +77,7 @@ public class Main {
                 //System.out.print(".");
                 System.out.println(path.length() / 2);
             }
-            if (path.length() > 4) {
+            if (path.length() > 200) {
                 continue;
             }
             for (int i = 0; i < pieces.length; i++) {
@@ -172,8 +171,7 @@ public class Main {
                 }
             }
         }
-        System.out.println("Finished, found no solution...");*/
-        cycle_tests(board, pieceArr);
+        System.out.println("Finished, found no solution...");
     }
 
     public static void printBoard(PiecePart[][] board) {
@@ -197,6 +195,12 @@ public class Main {
         return boardCopy;
     }
 
+    /**
+     * Creates a deep copy of the pieces array. Requires a board to alreay be copied
+     * @param pieces Pieces to copy
+     * @param boardCopy board that will back the piece part array in each piece
+     * @return a new piece array
+     */
     public static Piece[] piecesCopy(Piece[] pieces, PiecePart[][] boardCopy) {
         Piece[] pieceCopy = new Piece[pieces.length];
         //deep copy the pieces
@@ -263,6 +267,11 @@ public class Main {
         return false;
     }
 
+    /**
+     * Just some basic functionality tests for the cycle detection
+     * @param boards default board state
+     * @param pieces default piece array
+     */
     public static void cycle_tests(PiecePart[][] boards, Piece[] pieces) {
         try{
             StringBuilder test_path = null;
