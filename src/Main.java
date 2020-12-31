@@ -58,115 +58,53 @@ public class Main {
 
         Piece[] pieceArr = new Piece[]{green1, green2, green3, green4, blue1, blue2, blue3, blue4, purple, red};
         LinkedList<StringBuilder> paths = new LinkedList<>();
-        LinkedList<PiecePart[][]> queue = new LinkedList<>();
-        LinkedList<Piece[]> piecesQueue = new LinkedList<>();
-        queue.addLast(board);
-        paths.addLast(new StringBuilder("  "));
-        piecesQueue.addLast(pieceArr);
+        //LinkedList<PiecePart[][]> queue = new LinkedList<>();
+        //LinkedList<Piece[]> piecesQueue = new LinkedList<>();
+        //queue.addLast(board);
+        paths.addLast(new StringBuilder(""));
+        //piecesQueue.addLast(pieceArr);
         long count = 0;
-        System.out.print("Searching");
-        while (!queue.isEmpty()) {
-            PiecePart[][] state = queue.removeFirst();
+        System.out.println("Searching");
+
+        while (!paths.isEmpty()) {
+            //PiecePart[][] state = queue.removeFirst();
             StringBuilder path = paths.removeFirst();
-            Piece[] pieces = piecesQueue.removeFirst();
-            for (int i = 0; i < 4; i++) {
-                System.out.println(Arrays.toString(state[i]));
-            }
-            System.out.println();
+            //Piece[] pieces = piecesQueue.removeFirst();
+            //printBoard(state);
             if (count++ % 10000 == 0) {
                 //System.out.print(".");
                 System.out.println(path.length() / 2);
             }
-            if (path.length() > 200) {
+            if (path.length() > 10) {
                 continue;
             }
-            for (int i = 0; i < pieces.length; i++) {
+            for (int i = 0; i < pieceArr.length; i++) {
                 for (int m = 0; m < 4; m ++) {
-                    //deep copy the board
-
-                    PiecePart[][] boardCopy = boardCopy(state);
-                    Piece[] pieceCopy = piecesCopy(pieces, boardCopy);
-
-                    if (m == 0 && !path.toString().substring(path.toString().length() - 2).equals(i + "D") && pieceCopy[i].moveUp(boardCopy)) {
-                        //check if we moved red piece
-                        if (pieceCopy[i].identity == 4) {
-                            if (pieceCopy[i].pieces[0].i == 1 && pieceCopy[i].pieces[0].j == 3) {
-                                StringBuilder pathCopy = new StringBuilder(path.toString());
-                                pathCopy.append(i + "U");
-                                System.out.println(pathCopy);
-                                for (int r = 0; r < 4; r++) {
-                                    System.out.println(Arrays.toString(boardCopy[r]));
-                                }
+                    StringBuilder new_path;
+                    if (m == 0 ) {
+                        new_path = new StringBuilder(path.toString());
+                        new_path.append(i+"U");
+                    } else if (m == 1) {
+                        new_path = new StringBuilder(path.toString());
+                        new_path.append(i+"D");
+                    } else if (m == 2) {
+                        new_path = new StringBuilder(path.toString());
+                        new_path.append(i+"R");
+                    } else{
+                        new_path = new StringBuilder(path.toString());
+                        new_path.append(i+"L");
+                    }
+                    //if the new directions don't contain any cycles or invalid moves, we can continue working
+                    if (check_cycle_or_invalid(new_path, board, pieceArr)) {
+                        if (pieceArr[i].identity == 4) {
+                            if (pieceArr[i].pieces[0].i == 1 && pieceArr[i].pieces[0].j == 3) {
+                                System.out.println(new_path);
+                                printBoard(execute_moves(new_path,board,pieceArr));
                                 return;
                             }
                         }
-                        //add to queue
-                        queue.addLast(boardCopy);
-                        piecesQueue.addLast(pieceCopy);
-                        //copy the path
-                        StringBuilder pathCopy = new StringBuilder(path.toString());
-                        pathCopy.append(i + "U");
-                        paths.addLast(pathCopy);
-                    } else if (m == 1 && !path.toString().substring(path.toString().length() - 2).equals(i + "U") && pieceCopy[i].moveDown(boardCopy)) {
-                        //check if we moved red piece
-                        if (pieceCopy[i].identity == 4) {
-                            if (pieceCopy[i].pieces[0].i == 1 && pieceCopy[i].pieces[0].j == 3) {
-                                StringBuilder pathCopy = new StringBuilder(path.toString());
-                                pathCopy.append(i + "D");
-                                System.out.println(pathCopy);
-                                for (int r = 0; r < 4; r++) {
-                                    System.out.println(Arrays.toString(boardCopy[r]));
-                                }
-                                return;
-                            }
-                        }
-                        //add to queue
-                        queue.addLast(boardCopy);
-                        piecesQueue.addLast(pieceCopy);
-                        //copy the path
-                        StringBuilder pathCopy = new StringBuilder(path.toString());
-                        pathCopy.append(i + "D");
-                        paths.addLast(pathCopy);
-                    } else if (m == 2 && !path.toString().substring(path.toString().length() - 2).equals(i + "L") && pieceCopy[i].moveRight(boardCopy)) {
-                        //check if we moved red piece
-                        if (pieceCopy[i].identity == 4) {
-                            if (pieceCopy[i].pieces[0].i == 1 && pieceCopy[i].pieces[0].j == 3) {
-                                StringBuilder pathCopy = new StringBuilder(path.toString());
-                                pathCopy.append(i + "R");
-                                System.out.println(pathCopy);
-                                for (int r = 0; r < 4; r++) {
-                                    System.out.println(Arrays.toString(boardCopy[r]));
-                                }
-                                return;
-                            }
-                        }
-                        //add to queue
-                        queue.addLast(boardCopy);
-                        piecesQueue.addLast(pieceCopy);
-                        //copy the path
-                        StringBuilder pathCopy = new StringBuilder(path.toString());
-                        pathCopy.append(i + "R");
-                        paths.addLast(pathCopy);
-                    } else if (m == 3 && !path.toString().substring(path.toString().length() - 2).equals(i + "R") && pieceCopy[i].moveLeft(boardCopy)) {
-                        //check if we moved red piece
-                        if (pieceCopy[i].identity == 4) {
-                            if (pieceCopy[i].pieces[0].i == 1 && pieceCopy[i].pieces[0].j == 3) {
-                                StringBuilder pathCopy = new StringBuilder(path.toString());
-                                pathCopy.append(i + "L");
-                                System.out.println(pathCopy);
-                                for (int r = 0; r < 4; r++) {
-                                    System.out.println(Arrays.toString(boardCopy[r]));
-                                }
-                                return;
-                            }
-                        }
-                        //add to queue
-                        queue.addLast(boardCopy);
-                        piecesQueue.addLast(pieceCopy);
-                        //copy the path
-                        StringBuilder pathCopy = new StringBuilder(path.toString());
-                        pathCopy.append(i + "L");
-                        paths.addLast(pathCopy);
+                        //printBoard(execute_moves(new_path,board,pieceArr));
+                        paths.addLast(new_path);
                     }
                 }
             }
@@ -214,15 +152,39 @@ public class Main {
         return pieceCopy;
     }
 
+    public static PiecePart[][] execute_moves(StringBuilder path, PiecePart[][] board, Piece[] pieces) throws CloneNotSupportedException {
+        PiecePart[][] boardCopy = boardCopy(board);
+        Piece[] piecesCopy = piecesCopy(pieces, boardCopy);
+        if (path == null || path.toString().equals("")) {
+            return boardCopy;
+        }
+
+        for (int i = 0; i < path.length(); i+=2 ) {
+            String next_move = path.substring(i, i+2);
+            int piece_index = Integer.parseInt(next_move.substring(0, 1));
+            char direction = next_move.charAt(1);
+            boolean move_success;
+            if (direction == 'U') {
+                move_success = piecesCopy[piece_index].moveUp(boardCopy);
+            } else if (direction == 'D') {
+                move_success = piecesCopy[piece_index].moveDown(boardCopy);
+            } else if (direction == 'R') {
+                move_success = piecesCopy[piece_index].moveRight(boardCopy);
+            } else {
+                move_success = piecesCopy[piece_index].moveLeft(boardCopy);
+            }
+        }
+        return boardCopy;
+    }
 
     /**
-     * Determines if the string representation of moves contains a cycle
+     * Determines if the string representation of moves contains a cycle or is invalid
      * @param path - represents moves from starting position
-     * @return true if cycle, false if no cycle
+     * @return false if cycle or invalid, true if no cycle and valid path
      */
-    public static boolean check_cycle(StringBuilder path, PiecePart[][] board, Piece[] pieces) throws CloneNotSupportedException {
-        if (path == null || path.equals("")) {
-            return false;
+    public static boolean check_cycle_or_invalid(StringBuilder path, PiecePart[][] board, Piece[] pieces) throws CloneNotSupportedException {
+        if (path == null || path.toString().equals("")) {
+            return true;
         }
         ArrayList<PiecePart[][]> states = new ArrayList<>();
         states.add(board);
@@ -234,22 +196,22 @@ public class Main {
             String next_move = path.substring(i, i+2);
             int piece_index = Integer.parseInt(next_move.substring(0, 1));
             char direction = next_move.charAt(1);
-
+            boolean move_success;
             if (direction == 'U') {
-                piecesCopy[piece_index].moveUp(boardCopy);
+                move_success = piecesCopy[piece_index].moveUp(boardCopy);
             } else if (direction == 'D') {
-                piecesCopy[piece_index].moveDown(boardCopy);
+                move_success = piecesCopy[piece_index].moveDown(boardCopy);
             } else if (direction == 'R') {
-                piecesCopy[piece_index].moveRight(boardCopy);
+                move_success = piecesCopy[piece_index].moveRight(boardCopy);
             } else {
-                piecesCopy[piece_index].moveLeft(boardCopy);
+                move_success = piecesCopy[piece_index].moveLeft(boardCopy);
             }
-
+            if (!move_success) {
+                return false;
+            }
             //check if our current board state is the same as any previous state
-            for (int j = 0; j < states.size(); j++) {
+            for (PiecePart[][] oldstate : states) {
 
-
-                PiecePart[][] oldstate = states.get(j);
 
                 if (Arrays.deepEquals(oldstate, boardCopy)) {
                     /*
@@ -257,14 +219,14 @@ public class Main {
                     printBoard(oldstate);
                     System.out.println("new: " + i/2);
                     printBoard(boardCopy);*/
-                    return true;
+                    return false;
                 }
             }
             //otherwise, no cycle detected so far, so let's continue working
             states.add(boardCopy(boardCopy));
         }
 
-        return false;
+        return true;
     }
 
     /**
@@ -275,10 +237,10 @@ public class Main {
     public static void cycle_tests(PiecePart[][] boards, Piece[] pieces) {
         try{
             StringBuilder test_path = null;
-            if (check_cycle(test_path, boards, pieces)) {
-                System.out.println("Null test failed");
+            if (check_cycle_or_invalid(test_path, boards, pieces)) {
+                System.out.println("Null test passed (true)");
             } else {
-                System.out.println("Null test passed");
+                System.out.println("Null test failed (false)");
             }
 
         } catch (Exception e) {
@@ -287,10 +249,10 @@ public class Main {
 
         try{
             StringBuilder test_path = new StringBuilder("");
-            if (check_cycle(test_path, boards, pieces)) {
-                System.out.println("Empty test failed");
+            if (check_cycle_or_invalid(test_path, boards, pieces)) {
+                System.out.println("Empty test passed (true)");
             } else {
-                System.out.println("Empty test passed");
+                System.out.println("Empty test failed (false)");
             }
 
         } catch (Exception e) {
@@ -299,10 +261,10 @@ public class Main {
 
         try{
             StringBuilder test_path = new StringBuilder("0D");
-            if (check_cycle(test_path, boards, pieces)) {
-                System.out.println("Basic test failed");
+            if (check_cycle_or_invalid(test_path, boards, pieces)) {
+                System.out.println("Basic test passed (true)");
             } else {
-                System.out.println("Basic test passed");
+                System.out.println("Basic test failed (false)");
             }
 
         } catch (Exception e) {
@@ -310,11 +272,23 @@ public class Main {
         }
 
         try{
-            StringBuilder test_path = new StringBuilder("0D0U");
-            if (check_cycle(test_path, boards, pieces)) {
-                System.out.println("Basic cycle test passed");
+            StringBuilder test_path = new StringBuilder("0U");
+            if (check_cycle_or_invalid(test_path, boards, pieces)) {
+                System.out.println("Invalid test failed (true)");
             } else {
-                System.out.println("Basic cycle test failed");
+                System.out.println("Invalid test passed (false)");
+            }
+
+        } catch (Exception e) {
+            System.out.println("Invalid test exception:" + e);
+        }
+
+        try{
+            StringBuilder test_path = new StringBuilder("0D0U");
+            if (check_cycle_or_invalid(test_path, boards, pieces)) {
+                System.out.println("Basic cycle test failed (true)");
+            } else {
+                System.out.println("Basic cycle test passed (false)");
             }
 
         } catch (Exception e) {
@@ -323,10 +297,10 @@ public class Main {
 
         try{
             StringBuilder test_path = new StringBuilder("0D3U1R2R0U2L1L3D0D");
-            if (check_cycle(test_path, boards, pieces)) {
-                System.out.println("Advanced cycle test passed");
+            if (check_cycle_or_invalid(test_path, boards, pieces)) {
+                System.out.println("Advanced cycle test failed (true)");
             } else {
-                System.out.println("Advanced cycle test failed");
+                System.out.println("Advanced cycle test passed (false)");
             }
 
         } catch (Exception e) {
